@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\Product;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+class ExpireProducts implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public function handle(): void
+    {
+        Product::where('expires_at', '<', now())->delete();
+    }
+}

@@ -1,0 +1,29 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+body.dark {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+body.dark .card {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+body.dark .text-dark {
+    color: #ffffff !important;
+}
+
+body.dark .text-muted {
+    color: #bbbbbb !important;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15)!important;
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+}
+
+body.dark .hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(255,255,255,.15)!important;
+}
