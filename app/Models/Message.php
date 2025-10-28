@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User; // Импорт для fromUser() и toUser()
+use App\Models\Product; // Импорт для product()
 
 class Message extends Model
 {
