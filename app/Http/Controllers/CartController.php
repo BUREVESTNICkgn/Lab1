@@ -4,42 +4,45 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        $cart = session('cart', []);
-        $products = Product::findMany(array_keys($cart))->map(function ($p) use ($cart) {
-            $p->quantity = $cart[$p->id];
-            return $p;
-        });
-        $total = $products->sum(fn($p) => $p->price * $p->quantity);
-        return view('cart.index', compact('products', 'total'));
+        $this->middleware('auth');
     }
 
-    public function add(Request $request, Product $product)
+    public function index()
     {
-        $cart = session('cart', []);
-        $cart[$product->id] = ($cart[$product->id] ?? 0) + ($request->quantity ?? 1);
-        session(['cart' => $cart]);
-        return redirect()->back()->with('success', 'Добавлено в корзину');
+        $cart = Session::get('cart', []);
+        $products = Product::whereIn('id', array_keys($cart))->get();
+        $total = collect($cart)->sum(fn($item) => $item['quantity'] * $item['price']);
+        return view('cart.index', compact('products', 'cart', 'total'));
+    }
+
+    public function add(Product $product)
+    {
+        $cart = Session::get('cart', []);
+        $cart[$product->id] = ['quantity' => ($cart[$product->id]['quantity'] ?? 0) + 1, 'price' => $product->price];
+        Session::put('cart', $cart);
+        return redirect()->back()->with('success', 'Товар добавлен в корзину!');
     }
 
     public function update(Request $request, Product $product)
     {
-        $cart = session('cart', []);
-        $cart[$product->id] = $request->quantity;
-        if ($cart[$product->id] <= 0) unset($cart[$product->id]);
-        session(['cart' => $cart]);
-        return redirect()->route('cart.index');
+        $request->validate(['quantity' => 'required|integer|min:1']);
+        $cart = Session::get('cart', []);
+        $cart[$product->id] = ['quantity' => $request->quantity, 'price' => $product->price];
+        Session::put('cart', $cart);
+        return redirect()->back()->with('success', 'Количество обновлено!');
     }
 
     public function remove(Product $product)
     {
-        $cart = session('cart', []);
+        $cart = Session::get('cart', []);
         unset($cart[$product->id]);
-        session(['cart' => $cart]);
-        return redirect()->route('cart.index')->with('success', 'Удалено из корзины');
+        Session::put('cart', $cart);
+        return redirect()->back()->with('success', 'Товар удалён из корзины!');
     }
 }

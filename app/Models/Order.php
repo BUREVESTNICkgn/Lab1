@@ -9,10 +9,30 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'items', 'total', 'status'];
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'user_id',
+        'items',
+        'total',
+        'status',
+    ];
 
-    protected $casts = ['items' => 'array'];
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'items' => 'array',
+    ];
 
+    /**
+     * Отношение с пользователем (многие к одному).
+     */
     public function user()
     {
         return $this->belongsTo(User::class);

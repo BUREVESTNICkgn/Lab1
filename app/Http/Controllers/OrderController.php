@@ -6,41 +6,40 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class OrderController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        $orders = Order::where('user_id', Auth::id())->paginate(10);
+        $orders = Auth::user()->orders()->latest()->get();
         return view('orders.index', compact('orders'));
     }
 
     public function create()
     {
-        $cart = session('cart', []);
-        if (empty($cart)) return redirect()->route('products.index')->with('error', 'Корзина пуста');
-        $products = Product::findMany(array_keys($cart))->map(function ($p) use ($cart) {
-            $p->quantity = $cart[$p->id];
-            return $p;
-        });
-        $subtotal = $products->sum(fn($p) => $p->price * $p->quantity);
-        $delivery = 500;
-        $total = $subtotal + $delivery;
-        return view('orders.create', compact('products', 'subtotal', 'delivery', 'total'));
+        $cart = Session::get('cart', []);
+        if (empty($cart)) return redirect()->route('cart.index')->with('error', 'Корзина пуста!');
+        $products = Product::whereIn('id', array_keys($cart))->get();
+        $total = collect($cart)->sum(fn($item) => $item['quantity'] * $item['price']);
+        return view('orders.create', compact('products', 'cart', 'total'));
     }
 
     public function store(Request $request)
     {
-        $cart = session('cart', []);
-        if (empty($cart)) abort(400);
-        $subtotal = array_sum(array_map(fn($id, $qty) => Product::find($id)->price * $qty, array_keys($cart), $cart));
-        $total = $subtotal + 500;
-        Order::create([
-            'user_id' => Auth::id(),
+        $cart = Session::get('cart', []);
+        if (empty($cart)) return redirect()->route('cart.index')->with('error', 'Корзина пуста!');
+        $total = collect($cart)->sum(fn($item) => $item['quantity'] * $item['price']);
+        $order = Auth::user()->orders()->create([
             'items' => $cart,
             'total' => $total,
         ]);
-        session()->forget('cart');
-        return redirect()->route('my-orders')->with('success', 'Заказ оформлен');
+        Session::forget('cart');
+        return redirect()->route('my-orders')->with('success', 'Заказ оформлен!');
     }
 }

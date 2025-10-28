@@ -9,24 +9,26 @@ use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index(Product $product)
     {
-        $messages = Message::where('product_id', $product->id)
-            ->where(function ($q) {
-                $q->where('from_user_id', Auth::id())->orWhere('to_user_id', Auth::id());
-            })->orderBy('created_at')->get();
-        return view('messages.index', compact('messages', 'product'));
+        $messages = $product->messages()->with(['fromUser', 'toUser'])->get();
+        return view('messages.index', compact('product', 'messages'));
     }
 
     public function store(Request $request, Product $product)
     {
-        $validated = $request->validate(['body' => 'required|string|max:1000']);
+        $request->validate(['body' => 'required|string|max:1000']);
         Message::create([
             'from_user_id' => Auth::id(),
             'to_user_id' => $product->user_id,
             'product_id' => $product->id,
-            'body' => $validated['body'],
+            'body' => $request->body,
         ]);
-        return redirect()->back()->with('success', 'Сообщение отправлено');
+        return redirect()->back()->with('success', 'Сообщение отправлено!');
     }
 }

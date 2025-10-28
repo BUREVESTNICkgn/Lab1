@@ -2,28 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Category;
+use App\Models\Image;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index', 'show']);
+        $this->middleware('verified');
+    }
+
     public function index(Request $request)
     {
-        $query = Product::whereNull('expires_at')->orWhere('expires_at', '>', now());
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where('title', 'like', "%$search%")->orWhere('description', 'like', "%$search%");
-        }
-        if ($request->has('category')) {
-            $query->where('category_id', $request->category);
-        }
-        if ($request->routeIs('my-products')) {
-            $query->where('user_id', Auth::id());
-        }
-        $products = $query->paginate(10);
+        $user = Auth::user();
+        $products = Product::with('category', 'images')
+            ->when($request->category, fn($query) => $query->where('category_id', $request->category))
+            ->when($user, fn($query) => $query->where('user_id', $user->id)->orWhere('expires_at', '>', now()), 'my-products')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->paginate(10);
+
         $categories = Category::all();
         return view('products.index', compact('products', 'categories'));
     }
@@ -36,35 +40,36 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric',
+            'category_id' => 'required|exists:categories,id',
+            'images.*' => 'image|max:2048',
             'location' => 'required|string|max:255',
             'delivery' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'required|email',
-            'category_id' => 'required|exists:categories,id',
-            'expires_at' => 'nullable|date|after:now',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'expires_at' => 'required|date|after:today',
         ]);
 
-        $validated['user_id'] = Auth::id();
-        $product = Product::create($validated);
+        $product = Auth::user()->products()->create($request->only([
+            'title', 'description', 'price', 'category_id', 'location', 'delivery', 'phone', 'email', 'expires_at'
+        ]));
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store('public/images');
+                $path = $image->store('products', 'public');
                 $product->images()->create(['path' => $path]);
             }
         }
 
-        return redirect()->route('products.index')->with('success', 'Товар добавлен');
+        return redirect()->route('products.show', $product)->with('success', 'Товар добавлен!');
     }
 
     public function show(Product $product)
     {
-        if ($product->isExpired()) abort(404);
+        $product->load('user', 'category', 'images', 'messages');
         return view('products.show', compact('product'));
     }
 
@@ -78,35 +83,45 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $this->authorize('update', $product);
-
-        $validated = $request->validate([
-            // ... те же правила ...
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'category_id' => 'required|exists:categories,id',
+            'images.*' => 'image|max:2048',
+            'location' => 'required|string|max:255',
+            'delivery' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email',
+            'expires_at' => 'required|date|after:today',
         ]);
 
-        $product->update($validated);
+        $product->update($request->only([
+            'title', 'description', 'price', 'category_id', 'location', 'delivery', 'phone', 'email', 'expires_at'
+        ]));
 
         if ($request->hasFile('images')) {
-            // Удалить старые, если нужно
-            foreach ($product->images as $img) {
-                Storage::delete($img->path);
-                $img->delete();
+            foreach ($product->images as $image) {
+                Storage::disk('public')->delete($image->path);
+                $image->delete();
             }
             foreach ($request->file('images') as $image) {
-                $path = $image->store('public/images');
+                $path = $image->store('products', 'public');
                 $product->images()->create(['path' => $path]);
             }
         }
 
-        return redirect()->route('products.index')->with('success', 'Товар обновлён');
+        return redirect()->route('products.show', $product)->with('success', 'Товар обновлён!');
     }
 
     public function destroy(Product $product)
     {
         $this->authorize('delete', $product);
-        foreach ($product->images as $img) {
-            Storage::delete($img->path);
+        foreach ($product->images as $image) {
+            Storage::disk('public')->delete($image->path);
+            $image->delete();
         }
         $product->delete();
-        return redirect()->route('products.index')->with('success', 'Товар удалён');
+        return redirect()->route('my-products')->with('success', 'Товар удалён!');
     }
 }
