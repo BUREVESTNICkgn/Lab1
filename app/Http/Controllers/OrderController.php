@@ -6,40 +6,81 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 
 class OrderController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     public function index()
     {
-        $orders = Auth::user()->orders()->latest()->get();
+        $orders = Order::with('user', 'products')->paginate(10);
         return view('orders.index', compact('orders'));
     }
 
     public function create()
     {
-        $cart = Session::get('cart', []);
-        if (empty($cart)) return redirect()->route('cart.index')->with('error', 'Корзина пуста!');
-        $products = Product::whereIn('id', array_keys($cart))->get();
-        $total = collect($cart)->sum(fn($item) => $item['quantity'] * $item['price']);
-        return view('orders.create', compact('products', 'cart', 'total'));
+        $products = Product::all();
+        return view('orders.create', compact('products'));
     }
 
     public function store(Request $request)
     {
-        $cart = Session::get('cart', []);
-        if (empty($cart)) return redirect()->route('cart.index')->with('error', 'Корзина пуста!');
-        $total = collect($cart)->sum(fn($item) => $item['quantity'] * $item['price']);
-        $order = Auth::user()->orders()->create([
-            'items' => $cart,
-            'total' => $total,
+        $request->validate([
+            'products' => 'required|array',
+            'products.*.id' => 'exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
         ]);
-        Session::forget('cart');
-        return redirect()->route('my-orders')->with('success', 'Заказ оформлен!');
+
+        $total = 0;
+        $items = [];
+
+        foreach ($request->products as $item) {
+            $product = Product::find($item['id']);
+            $price = $product->price * $item['quantity'];
+            $total += $price;
+            $items[$product->id] = ['quantity' => $item['quantity'], 'price' => $product->price];
+        }
+
+        $order = Order::create([
+            'user_id' => Auth::id(),
+            'total' => $total,
+            'status' => 'pending',
+        ]);
+
+        $order->products()->attach($items);
+
+        return redirect()->route('orders.index')->with('success', 'Заказ создан');
+    }
+
+    public function show(Order $order)
+    {
+        $order->load('products');
+        return view('orders.show', compact('order'));
+    }
+
+    public function edit(Order $order)
+    {
+        $this->authorize('update', $order);
+        $products = Product::all();
+        return view('orders.edit', compact('order', 'products'));
+    }
+
+    public function update(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+
+        $request->validate([
+            'status' => 'required|in:pending,processing,completed,cancelled',
+        ]);
+
+        $order->update($request->only('status'));
+
+        return redirect()->route('orders.index')->with('success', 'Статус обновлён');
+    }
+
+    public function destroy(Order $order)
+    {
+        $this->authorize('delete', $order);
+        $order->products()->detach();
+        $order->delete();
+        return redirect()->route('orders.index')->with('success', 'Заказ удалён');
     }
 }
