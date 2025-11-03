@@ -3,6 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
+use Illuminate\Support\Facades\Auth;
+
+// Включаем стандартные маршруты авторизации
+Auth::routes([
+    'register' => false,  // отключаем регистрацию, если не нужна
+    'reset' => false,     // сброс пароля
+    'verify' => false,    // верификация email
+]);
 
 // Главная
 Route::get('/', [ProductController::class, 'index'])->name('home');
