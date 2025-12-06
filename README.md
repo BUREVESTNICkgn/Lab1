@@ -42,3 +42,10 @@ php artisan serve
 ```
 
 Очередь (если нужна): `php artisan queue:listen --tries=1`.
+
+## 5. Где смотреть логи 500
+
+- Основной файл: `storage/logs/laravel.log`.
+- Смотреть последние записи в Unix: `tail -n 200 storage/logs/laravel.log` или потоково `tail -f storage/logs/laravel.log`.
+- На Windows аналогично через PowerShell: `Get-Content storage/logs/laravel.log -Wait`.
+- Если файла нет, Laravel создаст его при первом запросе; убедитесь, что папка `storage/logs` доступна для записи.
