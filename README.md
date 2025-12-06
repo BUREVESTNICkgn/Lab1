@@ -13,6 +13,13 @@ extension=sqlite3
 
 После правки перезапустите PHP (или перезапустите терминал в Windows).
 
+**Windows-подсказки:**
+
+- В сборках XAMPP/WAMP путь обычно `C:\xampp\php\php.ini` или `C:\wamp64\bin\php\phpX.Y.Z\php.ini`.
+- Если строка начинается с `;extension=pdo_sqlite` или `;extension=sqlite3`, уберите точку с запятой.
+- Проверьте, что PHP действительно видит драйверы: `php -m | findstr sqlite` (PowerShell) должен вывести `pdo_sqlite` и `sqlite3`.
+- Если используете отдельный бинарь PHP, убедитесь, что `ext`-папка лежит рядом и в `php.ini` настроен `extension_dir`.
+
 ## 2. Подготовьте окружение
 
 ```bash
