@@ -24,10 +24,10 @@ extension=sqlite3
 
 ```bash
 cp .env.example .env
-php artisan key:generate
+# для продакшена сгенерируйте новый ключ: php artisan key:generate
 ```
 
-Файл `.env` уже настроен на SQLite (`DB_CONNECTION=sqlite`, `DB_DATABASE=./database/database.sqlite`).
+Файл `.env` уже содержит рабочий APP_KEY и настроен на SQLite (`DB_CONNECTION=sqlite`, `DB_DATABASE=./database/database.sqlite`).
 
 ## 3. Создайте файл базы и примените миграции
 
