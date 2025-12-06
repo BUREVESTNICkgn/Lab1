@@ -17,10 +17,28 @@
                     <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
-                        <!-- Категория -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Название</label>
+                            <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}" required>
+                            @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Описание</label>
+                            <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="4" required>{{ old('description') }}</textarea>
+                            @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Цена</label>
+                            <input type="number" step="0.01" name="price" class="form-control @error('price') is-invalid @enderror" value="{{ old('price') }}" required>
+                            @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
                         <div class="mb-3">
                             <label for="category_id" class="form-label fw-medium">Категория <span class="text-danger">*</span></label>
-                            <select name="category_id" class="form-control @error('category_id') is-invalid @enderror" required>
+                            <select name="category_id" class="form-control @error('category_id') is-invalid @enderror">
+                                <option value="">Без категории</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                                 @endforeach
@@ -30,22 +48,39 @@
                             @enderror
                         </div>
 
-                        <!-- ... твои поля title, description, price, location, delivery, phone, email ... -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Местоположение</label>
+                                <input type="text" name="location" class="form-control" value="{{ old('location') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Доставка</label>
+                                <input type="text" name="delivery" class="form-control" value="{{ old('delivery') }}">
+                            </div>
+                        </div>
 
-                        <!-- Срок размещения -->
-                        <div class="mb-3">
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Телефон</label>
+                                <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
                             <label for="expires_at" class="form-label fw-medium">Срок размещения (опционально)</label>
                             <input type="datetime-local" name="expires_at" class="form-control" value="{{ old('expires_at') }}">
                         </div>
 
-                        <!-- Изображения -->
                         <div class="mb-4">
                             <label for="images" class="form-label fw-medium">Фотографии товара (несколько)</label>
                             <input type="file" name="images[]" class="form-control" multiple accept="image/*">
                             <div class="form-text">Макс. 5 МБ на фото, до 5 фото.</div>
                         </div>
 
-                        <!-- Кнопки -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('products.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left me-1"></i> Отмена

@@ -27,7 +27,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @foreach($products as $product)
                 <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold">{{ $product->name }}</h2>
+                    <h2 class="text-xl font-semibold">{{ $product->title }}</h2>
                     <p class="text-gray-600 mt-2">{{ $product->description }}</p>
                     @if($product->category)
                         <p class="text-sm text-blue-600 mt-1">Категория: {{ $product->category->name }}</p>

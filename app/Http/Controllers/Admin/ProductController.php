@@ -17,7 +17,8 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with('category', 'user')->latest()->paginate(10);
-        return view('admin.products.index', compact('products'));
+        $categories = Category::all();
+        return view('admin.products.index', compact('products', 'categories'));
     }
 
     public function edit(Product $product)
