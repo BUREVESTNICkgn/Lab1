@@ -21,6 +21,7 @@
                         <th>#</th>
                         <th>Покупатель</th>
                         <th>Сумма</th>
+                        <th>Доставка</th>
                         <th>Статус</th>
                         <th>Товаров</th>
                         <th class="text-end">Действия</th>
@@ -32,9 +33,14 @@
                             <td>{{ $order->id }}</td>
                             <td>{{ $order->user->name ?? '—' }}</td>
                             <td>{{ number_format($order->total, 0, ',', ' ') }} ₽</td>
+                            <td>
+                                <div class="small text-muted text-uppercase">{{ $order->shipping_method === 'pickup' ? 'Самовывоз' : 'Доставка' }}</div>
+                                <div class="fw-semibold">{{ number_format($order->shipping_cost, 0, ',', ' ') }} ₽</div>
+                            </td>
                             <td><span class="badge-role">{{ $order->status }}</span></td>
                             <td>{{ $order->products->count() }}</td>
                             <td class="text-end">
+                                <a href="{{ route('staff.orders.show', $order) }}" class="btn btn-sm btn-link">Открыть</a>
                                 <form action="{{ route('staff.orders.update', $order) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('PUT')

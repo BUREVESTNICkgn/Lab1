@@ -36,6 +36,7 @@ Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
 Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+Route::post('/orders/{order}/messages', [OrderController::class, 'message'])->name('orders.messages.store');
 Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 Route::get('/my-orders', [OrderController::class, 'myOrders'])->name('my-orders');
 
@@ -67,5 +68,6 @@ Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
 // Менеджеры заказов
 Route::middleware('staff')->prefix('admin')->name('staff.')->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::put('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
 });

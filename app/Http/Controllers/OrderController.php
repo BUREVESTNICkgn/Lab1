@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -37,10 +38,14 @@ class OrderController extends Controller
             return $product->price * ($cart[$product->id]['quantity'] ?? 0);
         });
 
-        $shipping = $products->isEmpty() ? 0 : 500;
+        $shipping = $products->sum(function ($product) use ($cart) {
+            return ($product->shipping_cost ?? 0) * ($cart[$product->id]['quantity'] ?? 0);
+        });
+
+        $pickupAvailable = $products->every(fn ($product) => $product->pickup_available);
         $total = $subtotal + $shipping;
 
-        return view('orders.create', compact('products', 'cart', 'subtotal', 'shipping', 'total'));
+        return view('orders.create', compact('products', 'cart', 'subtotal', 'shipping', 'total', 'pickupAvailable'));
     }
 
     public function store(Request $request)
@@ -52,15 +57,36 @@ class OrderController extends Controller
 
         $products = Product::whereIn('id', array_keys($cart))->get();
 
-        $total = $products->sum(function ($product) use ($cart) {
+        $subtotal = $products->sum(function ($product) use ($cart) {
             return $product->price * ($cart[$product->id]['quantity'] ?? 0);
         });
 
-        $shipping = 500;
+        $shipping = $products->sum(function ($product) use ($cart) {
+            return ($product->shipping_cost ?? 0) * ($cart[$product->id]['quantity'] ?? 0);
+        });
+
+        $pickupAvailable = $products->every(fn ($product) => $product->pickup_available);
+
+        $request->validate([
+            'shipping_method' => ['required', 'in:delivery,pickup', function ($attribute, $value, $fail) use ($pickupAvailable) {
+                if ($value === 'pickup' && ! $pickupAvailable) {
+                    $fail('Самовывоз недоступен для выбранных товаров.');
+                }
+            }],
+            'shipping_address' => ['nullable', 'string', 'max:255', 'required_if:shipping_method,delivery'],
+            'contact_phone' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $shippingCost = $request->shipping_method === 'pickup' ? 0 : $shipping;
+
         $order = Order::create([
             'user_id' => Auth::id(),
-            'total' => $total + $shipping,
+            'total' => $subtotal + $shippingCost,
             'status' => 'pending',
+            'shipping_method' => $request->shipping_method,
+            'shipping_cost' => $shippingCost,
+            'shipping_address' => $request->shipping_method === 'pickup' ? null : $request->shipping_address,
+            'contact_phone' => $request->contact_phone,
         ]);
 
         $pivotData = [];
@@ -83,8 +109,12 @@ class OrderController extends Controller
         if ($order->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'manager'])) {
             abort(403);
         }
-        $order->load('products');
-        return view('orders.show', compact('order'));
+        $order->load(['products']);
+        $order->setRelation('messages', $order->messages()->with('fromUser')->orderBy('created_at')->get());
+        return view('orders.show', [
+            'order' => $order,
+            'canMessage' => in_array(Auth::user()->role, ['admin', 'manager']) || $order->user_id === Auth::id(),
+        ]);
     }
 
     public function edit(Order $order)
@@ -123,5 +153,27 @@ class OrderController extends Controller
     public function myOrders()
     {
         return $this->index();
+    }
+
+    public function message(Request $request, Order $order)
+    {
+        if ($order->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'manager'])) {
+            abort(403);
+        }
+
+        $request->validate(['body' => 'required|string|max:2000']);
+
+        $recipientId = $order->user_id;
+        if ($order->user_id === Auth::id()) {
+            $recipientId = User::whereIn('role', ['manager', 'admin'])->value('id') ?? $order->user_id;
+        }
+
+        $order->messages()->create([
+            'from_user_id' => Auth::id(),
+            'to_user_id' => $recipientId,
+            'body' => $request->body,
+        ]);
+
+        return redirect()->back()->with('success', 'Сообщение отправлено');
     }
 }

@@ -8,11 +8,11 @@
             <div class="hero-banner mb-4 d-flex justify-content-between align-items-start">
                 <div>
                     <h1>Каталог вычислительной техники</h1>
-                    <p class="mb-3 text-white-50">Подборка, оформленная как на Авито: карточки, быстрый поиск и фильтры.</p>
+                    <p class="mb-3 text-white-50">Современный маркетплейс с подборками, фильтрами и аккуратными карточками товаров.</p>
                     <div class="hero-badges d-flex gap-2 flex-wrap">
                         <span class="badge"><i class="bi bi-shield-check me-1"></i> Проверенные продавцы</span>
-                        <span class="badge"><i class="bi bi-truck me-1"></i> Доставка по РФ</span>
-                        <span class="badge"><i class="bi bi-stars me-1"></i> Топ-объявления</span>
+                        <span class="badge"><i class="bi bi-truck me-1"></i> Доставка и самовывоз</span>
+                        <span class="badge"><i class="bi bi-stars me-1"></i> Топовые предложения</span>
                     </div>
                 </div>
                 @auth
@@ -59,7 +59,7 @@
                 <div class="row row-cols-1 row-cols-md-2 g-4">
                     @foreach ($products as $product)
                         <div class="col">
-                            <div class="card h-100 shadow-sm border-0 hover-shadow product-card">
+                            <div class="card h-100 shadow-sm border-0 hover-shadow product-card rounded-4 overflow-hidden">
                                 <!-- Карусель для фото -->
                                 @if ($product->images->count() > 0)
                                     <div id="carousel-{{ $product->id }}" class="carousel slide">
@@ -86,20 +86,25 @@
                                 @endif
 
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title fw-bold">{{ $product->title }}</h5>
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title fw-bold mb-0">{{ $product->title }}</h5>
+                                        @if($product->pickup_available)
+                                            <span class="badge bg-success-subtle text-success">Самовывоз</span>
+                                        @endif
+                                    </div>
                                     <p class="card-text text-muted flex-grow-1">{{ Str::limit($product->description, 110) }}</p>
-                                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                                        <span class="price-chip"><i class="bi bi-cash-coin"></i>{{ number_format($product->price, 0, ',', ' ') }} ₽</span>
-                                        <a href="{{ route('products.show', $product) }}" class="btn btn-outline-primary">Подробнее</a>
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="price-chip"><i class="bi bi-cash-coin"></i>{{ number_format($product->price, 0, ',', ' ') }} ₽</span>
+                                            <span class="badge bg-info-subtle text-info">Доставка {{ number_format($product->shipping_cost, 0, ',', ' ') }} ₽</span>
+                                        </div>
+                                        <a href="{{ route('products.show', $product) }}" class="btn btn-primary w-100">Подробнее</a>
                                     </div>
                                 </div>
 
-                                <div class="card-footer bg-white text-muted small">
-                                    <i class="bi bi-calendar me-1"></i> {{ $product->created_at->format('d.m.Y') }}
-                                    @if ($product->expires_at)
-                                        • Истекает {{ $product->expires_at->format('d.m.Y') }}
-                                    @endif
-                                    • {{ $product->user->name ?? 'Аноним' }}
+                                <div class="card-footer bg-white text-muted small d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-geo-alt me-1"></i>{{ $product->location ?? 'Без города' }}</span>
+                                    <span><i class="bi bi-calendar me-1"></i>{{ $product->created_at->format('d.m') }}</span>
                                 </div>
                             </div>
                         </div>

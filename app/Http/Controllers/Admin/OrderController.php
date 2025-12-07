@@ -19,6 +19,16 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
+    public function show(Order $order)
+    {
+        $order->load(['products', 'user']);
+        $order->setRelation('messages', $order->messages()->with('fromUser')->orderBy('created_at')->get());
+        return view('orders.show', [
+            'order' => $order,
+            'canMessage' => true,
+        ]);
+    }
+
     public function update(Request $request, Order $order)
     {
         $data = $request->validate([

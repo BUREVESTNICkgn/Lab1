@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ session('dark_mode', false) ? 'dark' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -65,11 +65,6 @@
                             </div>
                         </li>
                     @endguest
-                    <li class="nav-item">
-                        <button class="btn btn-link nav-link" onclick="toggleDarkMode()">
-                            <i class="bi bi-moon-stars-fill"></i>
-                        </button>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -80,11 +75,5 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            fetch('/toggle-dark-mode', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
-        }
-    </script>
 </body>
 </html>

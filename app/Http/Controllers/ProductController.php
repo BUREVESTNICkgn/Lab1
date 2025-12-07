@@ -57,6 +57,8 @@ class ProductController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'pickup_available' => 'nullable|boolean',
             'category_id' => 'nullable|exists:categories,id',
             'location' => 'nullable|string|max:255',
             'delivery' => 'nullable|string|max:255',
@@ -70,6 +72,8 @@ class ProductController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'price' => $request->price,
+            'shipping_cost' => $request->shipping_cost ?? 0,
+            'pickup_available' => $request->boolean('pickup_available'),
             'location' => $request->location,
             'delivery' => $request->delivery,
             'phone' => $request->phone,
@@ -109,6 +113,8 @@ class ProductController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'pickup_available' => 'nullable|boolean',
             'category_id' => 'nullable|exists:categories,id',
             'location' => 'nullable|string|max:255',
             'delivery' => 'nullable|string|max:255',
@@ -118,7 +124,19 @@ class ProductController extends Controller
             'images.*' => 'image|max:5120',
         ]);
 
-        $product->update($request->only(['title', 'description', 'price', 'location', 'delivery', 'phone', 'email', 'expires_at', 'category_id']));
+        $product->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'price' => $request->price,
+            'shipping_cost' => $request->shipping_cost ?? 0,
+            'pickup_available' => $request->boolean('pickup_available'),
+            'location' => $request->location,
+            'delivery' => $request->delivery,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'expires_at' => $request->expires_at,
+            'category_id' => $request->category_id,
+        ]);
 
         $this->storeImages($product, $request);
 

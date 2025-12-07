@@ -48,10 +48,17 @@
                         </div>
                     @endif
 
-                    <p class="mb-2"><strong>Цена:</strong> {{ $product->price }} ₽</p>
+                    <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+                        <span class="price-chip fs-5"><i class="bi bi-cash-coin"></i>{{ number_format($product->price, 0, ',', ' ') }} ₽</span>
+                        <span class="badge-role">{{ $product->category?->name ?? 'Без категории' }}</span>
+                        @if($product->pickup_available)
+                            <span class="badge bg-success-subtle text-success">Самовывоз</span>
+                        @endif
+                    </div>
                     <p class="mb-2"><strong>Описание:</strong> {{ $product->description }}</p>
                     @if($product->location)<p class="mb-2"><strong>Местоположение:</strong> {{ $product->location }}</p>@endif
-                    @if($product->delivery)<p class="mb-2"><strong>Доставка:</strong> {{ $product->delivery }}</p>@endif
+                    <p class="mb-2"><strong>Доставка продавца:</strong> {{ number_format($product->shipping_cost, 0, ',', ' ') }} ₽</p>
+                    @if($product->delivery)<p class="mb-2"><strong>Условия:</strong> {{ $product->delivery }}</p>@endif
                     @if($product->phone)<p class="mb-2"><strong>Телефон:</strong> {{ $product->phone }}</p>@endif
                     @if($product->email)<p class="mb-2"><strong>Email:</strong> {{ $product->email }}</p>@endif
                     @if($product->expires_at)

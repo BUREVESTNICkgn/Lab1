@@ -1,12 +1,14 @@
 :root {
-    --accent: #005bff;
-    --accent-soft: #f0f4ff;
-    --text-main: #1f1f27;
+    --accent: #2563eb;
+    --accent-soft: #e8f0ff;
+    --accent-strong: #1d4ed8;
+    --text-main: #141824;
+    --card-radius: 18px;
 }
 
 body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f7f7fb;
+    background: radial-gradient(circle at 10% 20%, rgba(37,99,235,0.08), transparent 30%), #f7f8fb;
     color: var(--text-main);
 }
 
@@ -16,19 +18,32 @@ body {
 }
 
 .card {
-    border-radius: 14px;
+    border-radius: var(--card-radius);
 }
 
 .hero-banner {
-    background: linear-gradient(135deg, #0f1626, #15274a);
+    background: linear-gradient(120deg, #0f172a, #1d4ed8);
     color: #fff;
-    border-radius: 18px;
-    padding: 28px 32px;
-    box-shadow: 0 18px 40px rgba(15, 22, 38, 0.25);
+    border-radius: 24px;
+    padding: 32px 36px;
+    box-shadow: 0 18px 40px rgba(15, 22, 38, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    right: -120px;
+    top: -80px;
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 50%);
+    transform: rotate(18deg);
 }
 
 .hero-banner h1 {
-    font-size: 26px;
+    font-size: 28px;
     margin-bottom: 6px;
 }
 
@@ -36,32 +51,32 @@ body {
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: 14px;
     font-weight: 600;
 }
 
 .search-panel {
     background: #fff;
-    border-radius: 14px;
+    border-radius: 18px;
     padding: 18px;
     box-shadow: 0 8px 30px rgba(27, 35, 68, 0.08);
     border: 1px solid #eef0f6;
 }
 
 .product-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     transition: all 0.15s ease-in-out;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
 .price-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 12px;
-    border-radius: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
     background: var(--accent-soft);
-    color: var(--accent);
+    color: var(--accent-strong);
     font-weight: 700;
 }
 

@@ -31,6 +31,20 @@
                             <input type="number" step="0.01" name="price" class="form-control" value="{{ old('price', $product->price) }}" required>
                         </div>
 
+                        <div class="row g-3 align-items-end mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Стоимость доставки (₽)</label>
+                                <input type="number" step="0.01" name="shipping_cost" class="form-control" value="{{ old('shipping_cost', $product->shipping_cost) }}">
+                                <div class="form-text">Покажется при оформлении заказа.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="pickup_available" id="pickup_available" {{ old('pickup_available', $product->pickup_available) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="pickup_available">Самовывоз доступен</label>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="category_id" class="form-label fw-medium">Категория <span class="text-danger">*</span></label>
                             <select name="category_id" class="form-control">
