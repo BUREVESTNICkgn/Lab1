@@ -182,9 +182,12 @@ class OrderController extends Controller
             $recipientId = User::whereIn('role', ['manager', 'admin'])->value('id') ?? $order->user_id;
         }
 
+        $productId = $order->products()->first()?->id;
+
         $order->messages()->create([
             'from_user_id' => Auth::id(),
             'to_user_id' => $recipientId,
+            'product_id' => $productId,
             'body' => $request->body,
         ]);
 

@@ -72,11 +72,13 @@ class ProductController extends Controller
             'images.*' => 'image|max:5120',
         ]);
 
+        $shippingCost = $request->filled('shipping_cost') ? $request->shipping_cost : 0;
+
         $product = Product::create([
             'title' => $request->title,
             'description' => $request->description,
             'price' => $request->price,
-            'shipping_cost' => $request->shipping_cost ?? 0,
+            'shipping_cost' => $shippingCost,
             'pickup_available' => $request->boolean('pickup_available'),
             'is_visible' => true,
             'location' => $request->location,
@@ -133,11 +135,13 @@ class ProductController extends Controller
             'images.*' => 'image|max:5120',
         ]);
 
+        $shippingCost = $request->filled('shipping_cost') ? $request->shipping_cost : 0;
+
         $product->update([
             'title' => $request->title,
             'description' => $request->description,
             'price' => $request->price,
-            'shipping_cost' => $request->shipping_cost ?? 0,
+            'shipping_cost' => $shippingCost,
             'pickup_available' => $request->boolean('pickup_available'),
             'location' => $request->location,
             'delivery' => $request->delivery,
