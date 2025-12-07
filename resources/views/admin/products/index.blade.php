@@ -1,45 +1,53 @@
-@extends('layouts.app')  {{-- предполагаю базовый layout --}}
+@extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Продукты</h1>
-
-    {{-- Фильтр по категориям (строка ~28) --}}
-    <form method="GET" action="{{ route('products.index') }}" class="mb-6">
-        <div class="flex gap-4">
-            <select name="category_id" class="border p-2 rounded">
-                <option value="">Все категории</option>
-                @foreach($categories as $category)  {{-- ← теперь работает --}}
-                    <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                    </option>
-                @endforeach
-            </select>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Фильтр</button>
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h4 fw-bold mb-1">Модерация объявлений</h1>
+            <p class="text-muted mb-0">Администратор может править и удалять любые карточки товаров.</p>
         </div>
-    </form>
+    </div>
 
     @if(session('success'))
-        <div class="bg-green-100 text-green-700 p-4 mb-4 rounded">{{ session('success') }}</div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    @if($products->count() > 0)
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            @foreach($products as $product)
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h2 class="text-xl font-semibold">{{ $product->name }}</h2>
-                    <p class="text-gray-600 mt-2">{{ $product->description }}</p>
-                    @if($product->category)
-                        <p class="text-sm text-blue-600 mt-1">Категория: {{ $product->category->name }}</p>
-                    @endif
-                    <p class="text-lg font-bold text-green-600 mt-4">{{ $product->price }} ₽</p>
-                    <a href="{{ route('products.show', $product) }}" class="text-blue-500 hover:underline">Подробнее</a>
-                </div>
-            @endforeach
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Категория</th>
+                        <th>Цена</th>
+                        <th>Автор</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($products as $product)
+                        <tr>
+                            <td class="fw-semibold">{{ $product->title }}</td>
+                            <td>{{ $product->category->name ?? '—' }}</td>
+                            <td>{{ number_format($product->price, 0, ',', ' ') }} ₽</td>
+                            <td>{{ $product->user->name ?? '—' }}</td>
+                            <td class="text-end">
+                                <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-secondary me-1">Открыть</a>
+                                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-sm btn-outline-primary me-1">Редактировать</a>
+                                <form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить карточку?')">Удалить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-        {{ $products->links() }}  {{-- пагинация --}}
-    @else
-        <p class="text-gray-600">Продуктов пока нет.</p>
-    @endif
+    </div>
+
+    <div class="mt-3">{{ $products->links() }}</div>
 </div>
 @endsection

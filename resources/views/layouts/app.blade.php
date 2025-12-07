@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ session('dark_mode', false) ? 'dark' : '' }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Продажа вычислительной техники</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 </head>
 <body class="bg-light text-dark">
     <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
@@ -34,9 +37,10 @@
                             <a class="nav-link" href="{{ route('my-products') }}">Мои товары</a>
                         </li>
                         @if(auth()->user()->role === 'admin')
-                            <li class="nav-item">
-                                <a class="nav-link" href="/admin/products">Админ-панель</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/products">Админ-панель</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/users">Пользователи</a></li>
+                        @elseif(auth()->user()->role === 'manager')
+                            <li class="nav-item"><a class="nav-link" href="/admin/orders">Заказы</a></li>
                         @endif
                     @endauth
                 </ul>
@@ -47,7 +51,7 @@
                             <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                            <a class="nav-link" href="{{ route('register') }}">Регистрация</a>
                         </li>
                     @else
                         <li class="nav-item dropdown">
@@ -64,11 +68,6 @@
                             </div>
                         </li>
                     @endguest
-                    <li class="nav-item">
-                        <button class="btn btn-link nav-link" onclick="toggleDarkMode()">
-                            <i class="bi bi-moon-stars-fill"></i>
-                        </button>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -79,11 +78,5 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            fetch('/toggle-dark-mode', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
-        }
-    </script>
 </body>
 </html>

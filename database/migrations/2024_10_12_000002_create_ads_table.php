@@ -8,23 +8,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('ads', function (Blueprint $table) {
+        Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');  // Связь с пользователем
-            $table->string('title');  // Название объявления (для удобства поиска)
-            $table->text('description');  // Описание товара
-            $table->string('image')->nullable();  // Путь к изображению
-            $table->decimal('price', 8, 2);  // Стоимость
-            $table->string('location');  // Местонахождение
-            $table->string('delivery');  // Условия доставки
-            $table->string('phone');  // Телефон
-            $table->string('email');  // Email
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('title');
+            $table->text('description');
+            $table->decimal('price', 10, 2);
+            $table->string('location')->nullable();
+            $table->string('delivery')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('ads');
+        Schema::dropIfExists('products');
     }
 };

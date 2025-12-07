@@ -2,90 +2,188 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;  // ← добавлено
+use App\Models\Category;
+use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index', 'show']);
+    }
+
     public function index(Request $request)
     {
-        $query = Product::with(['user', 'category']);
+        $query = Product::with(['user', 'category', 'images'])
+            ->where('is_visible', true);
 
-        // Фильтр по категории, если передана
-        if ($request->has('category_id') && $request->category_id) {
-            $query->where('category_id', $request->category_id);
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
         }
 
-        $products = $query->paginate(10);
-        $categories = Category::all();  // ← добавлено: все категории
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                    ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $products = $query->latest()->paginate(10);
+        $categories = Category::all();
+
+        return view('products.index', compact('products', 'categories'));
+    }
+
+    public function myProducts()
+    {
+        $products = Product::with(['category', 'images'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->paginate(10);
+        $categories = Category::all();
 
         return view('products.index', compact('products', 'categories'));
     }
 
     public function create()
     {
-        $categories = Category::all();  // ← для формы создания
+        $categories = Category::all();
         return view('products.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id',  // ← добавлено
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'pickup_available' => 'nullable|boolean',
+            'category_id' => 'nullable|exists:categories,id',
+            'location' => 'nullable|string|max:255',
+            'delivery' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'expires_at' => 'nullable|date',
+            'images.*' => 'image|max:5120',
         ]);
 
-        Product::create([
-            'name' => $request->name,
+        $shippingCost = $request->filled('shipping_cost') ? $request->shipping_cost : 0;
+
+        $product = Product::create([
+            'title' => $request->title,
             'description' => $request->description,
             'price' => $request->price,
+            'shipping_cost' => $shippingCost,
+            'pickup_available' => $request->boolean('pickup_available'),
+            'is_visible' => true,
+            'location' => $request->location,
+            'delivery' => $request->delivery,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'expires_at' => $request->expires_at,
             'user_id' => Auth::id(),
-            'category_id' => $request->category_id,  // ← добавлено
+            'category_id' => $request->category_id,
         ]);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Продукт добавлен');
+        $this->storeImages($product, $request);
+
+        return redirect()->route('products.index')->with('success', 'Продукт добавлен');
     }
 
     public function show(Product $product)
     {
-        $product->load(['user', 'category']);
+        if (! $product->is_visible && ! in_array(Auth::user()?->role, ['admin']) && $product->user_id !== Auth::id()) {
+            abort(404);
+        }
+
+        $product->load(['user', 'category', 'images']);
         return view('products.show', compact('product'));
     }
 
     public function edit(Product $product)
     {
-        $this->authorize('update', $product);
-        $categories = Category::all();  // ← для формы редактирования
+        if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
+            abort(403);
+        }
+        $categories = Category::all();
         return view('products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, Product $product)
     {
-        $this->authorize('update', $product);
+        if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
+            abort(403);
+        }
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id',  // ← добавлено
+            'shipping_cost' => 'nullable|numeric|min:0',
+            'pickup_available' => 'nullable|boolean',
+            'category_id' => 'nullable|exists:categories,id',
+            'location' => 'nullable|string|max:255',
+            'delivery' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'expires_at' => 'nullable|date',
+            'images.*' => 'image|max:5120',
         ]);
 
-        $product->update($request->only(['name', 'description', 'price', 'category_id']));
+        $shippingCost = $request->filled('shipping_cost') ? $request->shipping_cost : 0;
 
-        return redirect()->route('products.index')
-            ->with('success', 'Продукт обновлён');
+        $product->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'price' => $request->price,
+            'shipping_cost' => $shippingCost,
+            'pickup_available' => $request->boolean('pickup_available'),
+            'location' => $request->location,
+            'delivery' => $request->delivery,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'expires_at' => $request->expires_at,
+            'category_id' => $request->category_id,
+        ]);
+
+        $this->storeImages($product, $request);
+
+        return redirect()->route('products.index')->with('success', 'Продукт обновлён');
     }
 
     public function destroy(Product $product)
     {
-        $this->authorize('delete', $product);
-        $product->delete();
-        return redirect()->route('products.index')
-            ->with('success', 'Продукт удалён');
+        if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
+            abort(403);
+        }
+        $product->is_visible = false;
+        $product->save();
+
+        return redirect()->route('products.index')->with('success', 'Продукт скрыт из каталога');
+    }
+
+    protected function storeImages(Product $product, Request $request): void
+    {
+        if ($request->hasFile('images')) {
+            $uploadPath = public_path('uploads/products');
+            if (! is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            foreach ($request->file('images') as $file) {
+                $filename = uniqid('product_') . '.' . $file->getClientOriginalExtension();
+                $file->move($uploadPath, $filename);
+
+                Image::create([
+                    'product_id' => $product->id,
+                    'path' => 'uploads/products/' . $filename,
+                ]);
+            }
+        }
     }
 }

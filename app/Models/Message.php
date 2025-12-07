@@ -11,7 +11,7 @@ class Message extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['from_user_id', 'to_user_id', 'product_id', 'body'];
+    protected $fillable = ['from_user_id', 'to_user_id', 'product_id', 'order_id', 'body'];
 
     public function fromUser()
     {
@@ -26,5 +26,10 @@ class Message extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 }

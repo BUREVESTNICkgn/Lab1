@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Здесь регистрируем middleware alias
         $middleware->alias([
             'admin' => \App\Http\Middleware\CheckAdmin::class,
+            'staff' => \App\Http\Middleware\CheckStaff::class,
         ]);
 
         // Другие настройки middleware, если нужно (например, global или group)

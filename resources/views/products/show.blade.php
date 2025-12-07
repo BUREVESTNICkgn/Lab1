@@ -14,21 +14,23 @@
                             <a href="{{ route('products.edit', $product) }}" class="btn btn-outline-primary btn-sm me-2">
                                 <i class="bi bi-pencil me-1"></i>Редактировать
                             </a>
-                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                <i class="bi bi-trash me-1"></i>Удалить
-                            </button>
+                            <form action="{{ route('products.destroy', $product) }}" method="POST" class="d-inline">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash me-1"></i>Удалить
+                                </button>
+                            </form>
                         </div>
                     @endif
                 </div>
 
                 <div class="card-body">
-                    <!-- Карусель -->
                     @if ($product->images->count() > 0)
                         <div id="productCarousel" class="carousel slide mb-4">
                             <div class="carousel-inner">
                                 @foreach ($product->images as $key => $img)
                                     <div class="carousel-item @if($key==0) active @endif">
-                                        <img src="{{ Storage::url($img->path) }}" class="d-block w-100 rounded" alt="">
+                                        <img src="{{ $img->url }}" class="d-block w-100 rounded" alt="">
                                     </div>
                                 @endforeach
                             </div>
@@ -46,7 +48,22 @@
                         </div>
                     @endif
 
-                    <!-- ... твои поля описания, цена, etc. ... -->
+                    <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+                        <span class="price-chip fs-5"><i class="bi bi-cash-coin"></i>{{ number_format($product->price, 0, ',', ' ') }} ₽</span>
+                        <span class="badge-role">{{ $product->category?->name ?? 'Без категории' }}</span>
+                        @if($product->pickup_available)
+                            <span class="badge bg-success-subtle text-success">Самовывоз</span>
+                        @endif
+                    </div>
+                    <p class="mb-2"><strong>Описание:</strong> {{ $product->description }}</p>
+                    @if($product->location)<p class="mb-2"><strong>Местоположение:</strong> {{ $product->location }}</p>@endif
+                    <p class="mb-2"><strong>Доставка продавца:</strong> {{ number_format($product->shipping_cost, 0, ',', ' ') }} ₽</p>
+                    @if($product->delivery)<p class="mb-2"><strong>Условия:</strong> {{ $product->delivery }}</p>@endif
+                    @if($product->phone)<p class="mb-2"><strong>Телефон:</strong> {{ $product->phone }}</p>@endif
+                    @if($product->email)<p class="mb-2"><strong>Email:</strong> {{ $product->email }}</p>@endif
+                    @if($product->expires_at)
+                        <p class="mb-2"><strong>Актуально до:</strong> {{ $product->expires_at->format('d.m.Y H:i') }}</p>
+                    @endif
 
                     @auth
                         <form action="{{ route('cart.add', $product) }}" method="POST" class="mt-4">
@@ -57,36 +74,11 @@
                             </div>
                         </form>
 
-                        <!-- Чат -->
                         <div class="mt-5">
                             <h5><i class="bi bi-chat-left-text me-2"></i>Чат с продавцом</h5>
                             <a href="{{ route('messages.index', $product) }}" class="btn btn-outline-info">Открыть чат</a>
                         </div>
                     @endauth
-                </div>
-
-                <!-- ... footer ... -->
-            </div>
-
-            <!-- Модальное для удаления -->
-            <div class="modal fade" id="deleteModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Подтверждение удаления</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            Уверены, что хотите удалить "{{ $product->title }}"?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                            <form action="{{ route('products.destroy', $product) }}" method="POST">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-danger">Удалить</button>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
 

@@ -16,15 +16,30 @@ class CartController extends Controller
     public function index()
     {
         $cart = Session::get('cart', []);
-        $products = Product::whereIn('id', array_keys($cart))->get();
-        $total = collect($cart)->sum(fn($item) => $item['quantity'] * $item['price']);
+        $products = Product::whereIn('id', array_keys($cart))
+            ->where('is_visible', true)
+            ->get();
+
+        $products->each(function ($product) use ($cart) {
+            $product->quantity = $cart[$product->id]['quantity'] ?? 0;
+        });
+
+        $total = $products->sum(fn($product) => $product->price * $product->quantity);
         return view('cart.index', compact('products', 'cart', 'total'));
     }
 
-    public function add(Product $product)
+    public function add(Request $request, Product $product)
     {
+        if (! $product->is_visible) {
+            abort(404);
+        }
+
+        $quantity = max((int) $request->input('quantity', 1), 1);
         $cart = Session::get('cart', []);
-        $cart[$product->id] = ['quantity' => ($cart[$product->id]['quantity'] ?? 0) + 1, 'price' => $product->price];
+        $cart[$product->id] = [
+            'quantity' => ($cart[$product->id]['quantity'] ?? 0) + $quantity,
+            'price' => $product->price,
+        ];
         Session::put('cart', $cart);
         return redirect()->back()->with('success', 'Товар добавлен в корзину!');
     }

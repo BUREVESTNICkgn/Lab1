@@ -16,50 +16,88 @@
                     <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data">
                         @csrf @method('PUT')
 
-                        <!-- Категория -->
+                        <div class="mb-3">
+                            <label class="form-label">Название</label>
+                            <input type="text" name="title" class="form-control" value="{{ old('title', $product->title) }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Описание</label>
+                            <textarea name="description" class="form-control" rows="4" required>{{ old('description', $product->description) }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Цена</label>
+                            <input type="number" step="0.01" name="price" class="form-control" value="{{ old('price', $product->price) }}" required>
+                        </div>
+
+                        <div class="row g-3 align-items-end mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Стоимость доставки (₽)</label>
+                                <input type="number" step="0.01" name="shipping_cost" class="form-control" value="{{ old('shipping_cost', $product->shipping_cost) }}">
+                                <div class="form-text">Покажется при оформлении заказа.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="pickup_available" id="pickup_available" {{ old('pickup_available', $product->pickup_available) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="pickup_available">Самовывоз доступен</label>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="category_id" class="form-label fw-medium">Категория <span class="text-danger">*</span></label>
-                            <select name="category_id" class="form-control @error('category_id') is-invalid @enderror" required>
+                            <select name="category_id" class="form-control">
+                                <option value="">Без категории</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                                 @endforeach
                             </select>
-                            @error('category_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
 
-                        <!-- ... твои поля с value="{{ old('field', $product->field) }}" ... -->
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Местоположение</label>
+                                <input type="text" name="location" class="form-control" value="{{ old('location', $product->location) }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Доставка</label>
+                                <input type="text" name="delivery" class="form-control" value="{{ old('delivery', $product->delivery) }}">
+                            </div>
+                        </div>
 
-                        <!-- Срок -->
-                        <div class="mb-3">
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Телефон</label>
+                                <input type="text" name="phone" class="form-control" value="{{ old('phone', $product->phone) }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $product->email) }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-3">
                             <label for="expires_at" class="form-label fw-medium">Срок размещения</label>
                             <input type="datetime-local" name="expires_at" class="form-control" value="{{ old('expires_at', $product->expires_at?->format('Y-m-d\TH:i')) }}">
                         </div>
 
-                        <!-- Текущие фото -->
                         <div class="mb-3">
                             <label class="form-label fw-medium">Текущие фото</label>
                             <div class="d-flex flex-wrap">
                                 @foreach($product->images as $img)
-                                    <div class="me-2 mb-2">
-                                        <img src="{{ Storage::url($img->path) }}" alt="" width="100">
-                                        <form action="/images/{{ $img->id }}" method="POST">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
-                                        </form>
+                                    <div class="me-2 mb-2 text-center">
+                                        <img src="{{ $img->url }}" alt="" width="100" class="d-block mb-1">
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
-                        <!-- Новые фото -->
                         <div class="mb-4">
                             <label for="images" class="form-label fw-medium">Добавить новые фото</label>
                             <input type="file" name="images[]" class="form-control" multiple>
                         </div>
 
-                        <!-- Кнопки -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('products.show', $product) }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left me-1"></i> Отмена
