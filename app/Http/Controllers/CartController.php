@@ -16,7 +16,9 @@ class CartController extends Controller
     public function index()
     {
         $cart = Session::get('cart', []);
-        $products = Product::whereIn('id', array_keys($cart))->get();
+        $products = Product::whereIn('id', array_keys($cart))
+            ->where('is_visible', true)
+            ->get();
 
         $products->each(function ($product) use ($cart) {
             $product->quantity = $cart[$product->id]['quantity'] ?? 0;
@@ -28,6 +30,10 @@ class CartController extends Controller
 
     public function add(Request $request, Product $product)
     {
+        if (! $product->is_visible) {
+            abort(404);
+        }
+
         $quantity = max((int) $request->input('quantity', 1), 1);
         $cart = Session::get('cart', []);
         $cart[$product->id] = [

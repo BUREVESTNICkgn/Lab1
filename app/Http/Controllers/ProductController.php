@@ -18,7 +18,8 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['user', 'category', 'images']);
+        $query = Product::with(['user', 'category', 'images'])
+            ->where('is_visible', true);
 
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
@@ -39,7 +40,10 @@ class ProductController extends Controller
 
     public function myProducts()
     {
-        $products = Product::with(['category', 'images'])->where('user_id', Auth::id())->latest()->paginate(10);
+        $products = Product::with(['category', 'images'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->paginate(10);
         $categories = Category::all();
 
         return view('products.index', compact('products', 'categories'));
@@ -74,6 +78,7 @@ class ProductController extends Controller
             'price' => $request->price,
             'shipping_cost' => $request->shipping_cost ?? 0,
             'pickup_available' => $request->boolean('pickup_available'),
+            'is_visible' => true,
             'location' => $request->location,
             'delivery' => $request->delivery,
             'phone' => $request->phone,
@@ -90,6 +95,10 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        if (! $product->is_visible && ! in_array(Auth::user()?->role, ['admin']) && $product->user_id !== Auth::id()) {
+            abort(404);
+        }
+
         $product->load(['user', 'category', 'images']);
         return view('products.show', compact('product'));
     }
@@ -148,15 +157,10 @@ class ProductController extends Controller
         if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
             abort(403);
         }
-        foreach ($product->images as $image) {
-            $absolutePath = public_path($image->path);
-            if (file_exists($absolutePath)) {
-                @unlink($absolutePath);
-            }
-            $image->delete();
-        }
-        $product->delete();
-        return redirect()->route('products.index')->with('success', 'Продукт удалён');
+        $product->is_visible = false;
+        $product->save();
+
+        return redirect()->route('products.index')->with('success', 'Продукт скрыт из каталога');
     }
 
     protected function storeImages(Product $product, Request $request): void

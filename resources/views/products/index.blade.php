@@ -8,7 +8,6 @@
             <div class="hero-banner mb-4 d-flex justify-content-between align-items-start">
                 <div>
                     <h1>Каталог вычислительной техники</h1>
-                    <p class="mb-3 text-white-50">Современный маркетплейс с подборками, фильтрами и аккуратными карточками товаров.</p>
                     <div class="hero-badges d-flex gap-2 flex-wrap">
                         <span class="badge"><i class="bi bi-shield-check me-1"></i> Проверенные продавцы</span>
                         <span class="badge"><i class="bi bi-truck me-1"></i> Доставка и самовывоз</span>

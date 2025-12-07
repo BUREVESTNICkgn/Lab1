@@ -22,15 +22,16 @@ class Image extends Model
 
     public function getUrlAttribute(): string
     {
-        $storagePath = 'storage/' . ltrim($this->path, '/');
+        $normalizedPath = str_replace('\\', '/', ltrim($this->path, '/'));
+        $storagePath = 'storage/' . $normalizedPath;
 
-        if (Storage::disk('public')->exists($this->path)) {
+        if (Storage::disk('public')->exists($normalizedPath)) {
             return asset($storagePath);
         }
 
-        $publicPath = public_path($this->path);
+        $publicPath = public_path($normalizedPath);
         if (file_exists($publicPath)) {
-            return asset($this->path);
+            return asset($normalizedPath);
         }
 
         return 'https://placehold.co/600x400?text=Нет+фото';

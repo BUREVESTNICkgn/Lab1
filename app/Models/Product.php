@@ -18,6 +18,7 @@ class Product extends Model
         'price',
         'shipping_cost',
         'pickup_available',
+        'is_visible',
         'location',
         'delivery',
         'phone',
@@ -30,6 +31,7 @@ class Product extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'pickup_available' => 'boolean',
+        'is_visible' => 'boolean',
     ];
 
     public function user(): BelongsTo

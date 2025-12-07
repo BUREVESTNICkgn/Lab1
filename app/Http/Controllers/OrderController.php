@@ -32,7 +32,14 @@ class OrderController extends Controller
     public function create()
     {
         $cart = Session::get('cart', []);
-        $products = Product::whereIn('id', array_keys($cart))->get();
+        $products = Product::whereIn('id', array_keys($cart))
+            ->where('is_visible', true)
+            ->get();
+
+        if ($products->isEmpty()) {
+            Session::forget('cart');
+            return redirect()->route('products.index')->with('error', 'Товары недоступны или скрыты.');
+        }
 
         $subtotal = $products->sum(function ($product) use ($cart) {
             return $product->price * ($cart[$product->id]['quantity'] ?? 0);
@@ -55,7 +62,14 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'Корзина пуста');
         }
 
-        $products = Product::whereIn('id', array_keys($cart))->get();
+        $products = Product::whereIn('id', array_keys($cart))
+            ->where('is_visible', true)
+            ->get();
+
+        if ($products->isEmpty()) {
+            Session::forget('cart');
+            return redirect()->route('products.index')->with('error', 'Товары недоступны или скрыты.');
+        }
 
         $subtotal = $products->sum(function ($product) use ($cart) {
             return $product->price * ($cart[$product->id]['quantity'] ?? 0);
