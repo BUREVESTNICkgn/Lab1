@@ -92,7 +92,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        if ($product->user_id !== Auth::id()) {
+        if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
             abort(403);
         }
         $categories = Category::all();
@@ -101,7 +101,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        if ($product->user_id !== Auth::id()) {
+        if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
             abort(403);
         }
 
@@ -127,11 +127,14 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->user_id !== Auth::id()) {
+        if ($product->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
             abort(403);
         }
         foreach ($product->images as $image) {
-            Storage::disk('public')->delete($image->path);
+            $absolutePath = public_path($image->path);
+            if (file_exists($absolutePath)) {
+                @unlink($absolutePath);
+            }
             $image->delete();
         }
         $product->delete();
@@ -141,11 +144,18 @@ class ProductController extends Controller
     protected function storeImages(Product $product, Request $request): void
     {
         if ($request->hasFile('images')) {
+            $uploadPath = public_path('uploads/products');
+            if (! is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
             foreach ($request->file('images') as $file) {
-                $path = $file->store('products', 'public');
+                $filename = uniqid('product_') . '.' . $file->getClientOriginalExtension();
+                $file->move($uploadPath, $filename);
+
                 Image::create([
                     'product_id' => $product->id,
-                    'path' => $path,
+                    'path' => 'uploads/products/' . $filename,
                 ]);
             }
         }

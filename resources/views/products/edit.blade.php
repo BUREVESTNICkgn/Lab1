@@ -73,7 +73,7 @@
                             <div class="d-flex flex-wrap">
                                 @foreach($product->images as $img)
                                     <div class="me-2 mb-2 text-center">
-                                        <img src="{{ Storage::url($img->path) }}" alt="" width="100" class="d-block mb-1">
+                                        <img src="{{ $img->url }}" alt="" width="100" class="d-block mb-1">
                                     </div>
                                 @endforeach
                             </div>

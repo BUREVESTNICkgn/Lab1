@@ -17,10 +17,13 @@ class OrderController extends Controller
 
     public function index()
     {
-        $orders = Order::with(['products', 'user'])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->paginate(10);
+        $query = Order::with(['products', 'user'])->latest();
+
+        if (! in_array(Auth::user()->role, ['admin', 'manager'])) {
+            $query->where('user_id', Auth::id());
+        }
+
+        $orders = $query->paginate(10);
 
         return view('orders.index', compact('orders'));
     }
@@ -77,7 +80,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        if ($order->user_id !== Auth::id()) {
+        if ($order->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'manager'])) {
             abort(403);
         }
         $order->load('products');
@@ -86,7 +89,7 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        if ($order->user_id !== Auth::id()) {
+        if ($order->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'manager'])) {
             abort(403);
         }
         return view('orders.edit', compact('order'));
@@ -94,7 +97,7 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order)
     {
-        if ($order->user_id !== Auth::id()) {
+        if ($order->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'manager'])) {
             abort(403);
         }
 
@@ -109,7 +112,7 @@ class OrderController extends Controller
 
     public function destroy(Order $order)
     {
-        if ($order->user_id !== Auth::id()) {
+        if ($order->user_id !== Auth::id() && ! in_array(Auth::user()->role, ['admin', 'manager'])) {
             abort(403);
         }
         $order->products()->detach();

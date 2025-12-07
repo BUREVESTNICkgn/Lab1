@@ -4,9 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Продажа вычислительной техники</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 </head>
 <body class="bg-light text-dark">
     <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
@@ -34,9 +37,10 @@
                             <a class="nav-link" href="{{ route('my-products') }}">Мои товары</a>
                         </li>
                         @if(auth()->user()->role === 'admin')
-                            <li class="nav-item">
-                                <a class="nav-link" href="/admin/products">Админ-панель</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/products">Админ-панель</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/admin/users">Пользователи</a></li>
+                        @elseif(auth()->user()->role === 'manager')
+                            <li class="nav-item"><a class="nav-link" href="/admin/orders">Заказы</a></li>
                         @endif
                     @endauth
                 </ul>
